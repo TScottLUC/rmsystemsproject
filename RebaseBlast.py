@@ -1,18 +1,28 @@
-#import os to work with UNIX commands
-import os
-
-#assume the local blast db is already created - for example with title 'rebase'
 #for now, this code assumes there is only one multi-FASTA file being used
 #it will later need to BLAST many multi-FASTA files in one run
 
-input_file = "example_file.fasta"
-output_file = "output.csv"
+#import os to work with UNIX commands
+import os
 
-#This blast command will generate a csv formatted output file containing the Query Seq-id, the subject seq-id, the e-value, the query coverage, the percent identity, the score, and the alignment length for each hit.
-blast_command = 'blastn -query ' + input_file + ' -db rebase -out ' + output_file + ' -outfmt 10 qseqid sseqid evalue qcovs pident score length'
+#import csv and operator for working with csv files
+import csv
+import operator
+
+#local blast DB is named LocalRebaseDB
+
+input_file='shortened.fasta' #EXAMPLE FILE
+output_file='temp.csv'
+
+#This blast command will generate a csv formatted output file containing the Query Seq-id, the subject seq-id, the e-value, the query coverage, the percent identity, the bitscore, and the alignment length for each hit.
+blast_command = 'blastn -query ' + input_file + ' -db LocalRebaseDB -out ' + output_file + ' -outfmt "10 qseqid sseqid evalue qcovs pident bitscore length"'
 os.system(blast_command)
 
-#from this csv file, we will need to parse just the top hit for each multi-fasta assembly run
+#read the csv file and sort it by bitscore
+with open(output_file) as csvFile:
+  reader = csv.reader(csvFile, delimiter=',')
+  sortedList = sorted(reader,key=lambda x: float(x[5]),reverse=True) #blast output is sorted by bitscore
+  
+topHit=sortedList[0] #now we have just the top hit for the multi-fasta assembly
 
 #output needed: genome name (which genome the hit came from) - can get this from input file
 #contig - may be provided from qseqid
