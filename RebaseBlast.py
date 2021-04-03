@@ -1,8 +1,12 @@
-#for now, this code assumes there is only one multi-FASTA file being used
-#it will later need to BLAST many multi-FASTA files in one run
-
 #import os to work with UNIX commands
 import os
+
+import urllib
+from Bio import Entrez
+import gzip
+import shutil
+
+Entrez.email = 
 
 #import csv and operator for working with csv files
 import csv
@@ -20,7 +24,32 @@ output_name = "output.txt"
 final_output=open(output_name,'w')
 fileCount = 0
 
+ids=[]
+for line in open('Book1.txt').readlines():
+  ids.append(line.strip())
+
+os.system('mkdir sequences')
+
+idsused = 1
+for id in ids:
+  print("Downloading " + id + " from NCBI... (" + str(idsused) + ")")
+  handle = Entrez.esearch(db="assembly", term=id+"[id]", retmax='1')
+  record = Entrez.read(handle)
+  searchid=record['IdList'][0]
+  esummary_handle=Entrez.esummary(db="assembly",id=searchid, report="full")
+  esummary_record = Entrez.read(esummary_handle)
+  url = esummary_record['DocumentSummarySet']['DocumentSummary'][0]['FtpPath_RefSeq']
+  label = os.path.basename(url)
+  link = os.path.join(url,label+'_genomic.fna.gz')
+  link=link.replace('\\','/')
+  urllib.request.urlretrieve(link, 'sequences/' + f'{label}.fna.gz')
+  idsused+=1
+
 for fileName in os.listdir("sequences"):
+
+  with gzip.open("sequences/" + fileName,'rb') as f_in:
+    with open("sequences/" + fileName[:fileName.index('.gz')],'wb') as f_out:
+      shutil.copyfileobj(f_in, f_out)
 
   temp_output_file='temp.csv'
   
