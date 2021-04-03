@@ -5,8 +5,14 @@ import urllib
 from Bio import Entrez
 import gzip
 import shutil
+import argparse
 
-Entrez.email = 
+parser = argparse.ArgumentParser()
+parser.add_argument('-e', '--email', help="Enter your email for Entrez here", required=True)
+parser.add_argument('-i', '--input', help="Input file name (list of NCBI accession numbers, one on each line)", required=True)
+args = parser.parse_args()
+
+Entrez.email = args.email
 
 #import csv and operator for working with csv files
 import csv
@@ -25,7 +31,7 @@ final_output=open(output_name,'w')
 fileCount = 0
 
 ids=[]
-for line in open('Book1.txt').readlines():
+for line in open(args.input).readlines():
   ids.append(line.strip())
 
 os.system('mkdir sequences')
@@ -58,7 +64,7 @@ for fileName in os.listdir("sequences"):
   print("Running " + fileName + "..." + "(" + str(fileCount) + ")")
   
   #This blast command will generate a csv formatted output file containing the Query Seq-id, the subject seq-id, the e-value, the query coverage, the percent identity, the bitscore, and the alignment length for each hit.
-  blast_command = 'blastn -ungapped -query sequences/' + fileName + ' -db LocalRebaseDB -out ' + temp_output_file + ' -outfmt "10 qseqid sseqid evalue qcovs pident bitscore length"'
+  blast_command = 'blastn -ungapped -query sequences/' + fileName[:fileName.index('.gz')] + ' -db LocalRebaseDB -out ' + temp_output_file + ' -outfmt "10 qseqid sseqid evalue qcovs pident bitscore length"'
   os.system(blast_command)
   
   #read the csv file and sort it by bitscore
