@@ -8,5 +8,5 @@ with open(fname) as f_in, open('plasmidAccessions.txt', 'w') as f_out:
   rd = csv.reader(f_in, delimiter="\t", quotechar='"')
   for row in rd:
     if(row[3] == "yes"):
-      f_out.write(row[0]+'\n')
+      f_out.write(row[1]+'\n')
   f_in.close(); f_out.close();
