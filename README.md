@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # rmsystemsproject
 COMP 383/483 RM Systems Project
 this is practice
@@ -61,4 +60,3 @@ Test Data (10 accession numbers) is provided in AccessionNumbers10.txt. To run t
 ```
 python3 RebaseBlast.py --email EMAIL --input AccessionNumbers10.txt
 ```
->>>>>>> upstream/main
