@@ -1,6 +1,16 @@
 import os
 import sys
 from Bio import SeqIO
+from ftplib import FTP
+
+print('Retrieving sequences from REBASE')
+ftp = FTP('ftp.neb.com')
+ftp.login(passwd='mloffredo@luc.edu')
+ftp.cwd('pub/rebase')
+# ftp.retrlines('LIST')
+with open('dna_seqs.txt', 'wb') as seqs_file:
+  ftp.retrbinary('RETR dna_seqs.txt', seqs_file.write)
+  seqs_file.close()
 
 # clean up lines from file received from REBASE
 print('Formatting sequences received from REBASE')
