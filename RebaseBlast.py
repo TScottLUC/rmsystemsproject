@@ -41,6 +41,8 @@ for line in open(args.input).readlines():
   ids.append(line.strip())
 
 #make a sequences directory to store all sequence fasta files in
+if (os.path.isdir('sequences')):
+  os.system('rm -r sequences')
 os.system('mkdir sequences')
 
 #this for loop takes each id and downloads it's assembly file from NCBI through FTP
@@ -70,9 +72,14 @@ for id in ids:
   link=link.replace('\\','/') #reformat some slashes from the link
   urllib.request.urlretrieve(link, 'sequences/' + f'{label}.fna.gz')
 
-#open the final output file
-output_name="output.txt"
-final_output=open(output_name,'w')
+#open the output files
+csv_output_name = "RMBlastCSV.csv"
+csv_output=open(csv_output_name,'w')
+fasta_output_name="RMBlastFasta.fasta"
+fasta_output=open(fasta_output_name,'w')
+
+#write the headers to the simple output file
+csv_output.write('Genome,Contig,RMSystemName,SystemType,E-Value,% Identity,Bitscore,Length\n')
 
 #count the files BLASTed so the user can follow the progress of the script
 fileCount = 0
@@ -97,7 +104,7 @@ for fileName in os.listdir("sequences"):
   
   #This blast command will generate a csv formatted output file containing the Query Seq-id, the subject seq-id, the e-value, the query coverage, the percent identity, the bitscore, and the alignment length for each hit.
   #the local BLAST db created in RebaseSetup is named LocalRebaseDB
-  blast_command = 'blastn -ungapped -query sequences/' + fileName[:fileName.index('.gz')] + ' -db LocalRebaseDB -out ' + temp_output_file + ' -outfmt "10 qseqid sseqid evalue qcovs pident bitscore length"'
+  blast_command = 'blastn -ungapped -query sequences/' + fileName[:fileName.index('.gz')] + ' -db LocalRebaseDB -out ' + temp_output_file + ' -outfmt "10 qseqid sseqid evalue pident bitscore length"'
   os.system(blast_command)
   
   #read the csv file and sort it by bitscore
@@ -131,16 +138,37 @@ for fileName in os.listdir("sequences"):
   #get the name of the system and its type from the REBASE description
   nameOfSystem = hitDict["REBASE"]
   systemType = hitDict["EnzType"]
+  try:
+    proteinID = hitDict["ProteinId"]
+  except KeyError:
+    proteinID = "N/A"
   
-  #write relevant output to the outfile
-  final_output.write("Genome file: " + genomeName + "\n")
-  final_output.write("Contig: " + contig + "\n")
-  final_output.write("Name of System: " + nameOfSystem + "\n")
-  final_output.write("System Type: " + systemType + "\n")
-  final_output.write("E-Value: " + topHit[2] + "\n")
-  final_output.write("Bitscore: " + topHit[5] + "\n")
-  final_output.write("Sequence from REBASE: \n" + topHitSequence + "\n\n")
+  eValue = topHit[2]
+  pIdent = topHit[3]
+  bitscore = topHit[4]
+  length = topHit[5]
+  
+  #write relevant output to the output files
+  csv_output.write(genomeName + ",")
+  csv_output.write(contig + ",")
+  csv_output.write(nameOfSystem + ",")
+  csv_output.write(systemType + ",")
+  csv_output.write(eValue + ",")
+  csv_output.write(pIdent + ",")
+  csv_output.write(bitscore + ",")
+  csv_output.write(length + "\n")
+  
+  fasta_output.write(">Genome: " + genomeName + "\t")
+  fasta_output.write("Contig: " + contig + "\t")
+  fasta_output.write("RMSystemName: " + nameOfSystem + "\t")
+  fasta_output.write("SystemType: " + systemType + "\t")
+  fasta_output.write("ProteinID: " + proteinID + "\t")
+  fasta_output.write("E-Val: " + eValue + "\t")
+  fasta_output.write("Bitscore: " + bitscore + "\n")
+  fasta_output.write(topHitSequence + "\n")
 
 print("Cleaning up...")
 os.system("rm temp.csv")
-print("Done! Output can be found in " + output_name + ".")
+print("Done!")
+print("Output with more BLAST information (without sequences, csv formatted) can be found in " + csv_output_name + ".")
+print("Output with sequences from REBASE and protein IDs (fasta formatted) can be found in " + fasta_output_name + ".")
