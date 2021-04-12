@@ -61,10 +61,13 @@ for id in ids:
   
   #get the assembly summary/report using the assembly search id
   esummary_handle=Entrez.esummary(db="assembly",id=searchid, report="full")
-  esummary_record = Entrez.read(esummary_handle)
+  esummary_record = Entrez.read(esummary_handle,validate=False)
   
   #get the FTP link for the assembly file
-  url = esummary_record['DocumentSummarySet']['DocumentSummary'][0]['FtpPath_RefSeq']
+  try:
+    url = esummary_record['DocumentSummarySet']['DocumentSummary'][0]['FtpPath_RefSeq']
+  except IndexError:
+    continue
   
   #download the assembly file via FTP to the sequences directory
   label = os.path.basename(url)
