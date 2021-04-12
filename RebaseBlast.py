@@ -19,6 +19,7 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('-e', '--email', help="Enter your email for Entrez here", required=True)
 parser.add_argument('-i', '--input', help="Input file name (list of NCBI accession numbers, one on each line)", required=True)
+parser.add_argument('-p', '--plasmids', help="Use this tag if you would also like to compare the BLAST results to Plasmid Finder results (from plasmid_finder_results_putonti.tsv)", action="store_true")
 args = parser.parse_args()
 
 #set Entrez's email to the email provided
@@ -169,6 +170,45 @@ for fileName in os.listdir("sequences"):
   fasta_output.write("E-Val: " + eValue + "\t")
   fasta_output.write("Bitscore: " + bitscore + "\n")
   fasta_output.write(topHitSequence + "\n")
+  
+csv_output.close()
+fasta_output.close()
+
+if args.plasmids:
+  os.system('python3 ParsePlasmidGenomes.py')
+  plasmidYes = []
+  for line in open('plasmidAccessions.txt'):
+    plasmidYes.append(line.strip())
+  typeYes = {}
+  typeAll = {}
+  for line in open('RMBlastCSV.csv').readlines()[1:]:
+    blastInfo = line.split(',')
+    accession = blastInfo[0]
+    accession = accession[:accession.index('_ASM')]
+    enzType = blastInfo[3]
+    if enzType in typeAll:
+      typeAll[enzType] += 1
+    else:
+      typeAll[enzType] = 1
+    if accession in plasmidYes:
+      if enzType in typeYes:
+        typeYes[enzType] += 1
+      else:
+        typeYes[enzType] = 1
+  
+  plasmidResults = open('plasmidCompareResults.csv','w')
+  plasmidResults.write('RM System Type,Amount of System Type,Amount of Type with Plasmid,% with Plasmid\n')
+  for rmType in typeAll.keys():
+      plasmidResults.write(rmType + ',')
+      plasmidResults.write(str(typeAll[rmType]) + ',')
+      try:
+        plasmidResults.write(str(typeYes[rmType]) + ',')
+      except KeyError:
+        typeYes[rmType] = 0
+        plasmidResults.write(str(typeYes[rmType]) + '.,')
+      plasmidResults.write(str(float(typeYes[rmType]/typeAll[rmType])) + '\n')
+
+
 
 print("Cleaning up...")
 os.system("rm temp.csv")
