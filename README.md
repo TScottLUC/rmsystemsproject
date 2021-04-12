@@ -47,7 +47,9 @@ python3 RebaseBlast.py --email EMAIL --input INPUT
 
 Where EMAIL is your email (used for Entrez), and INPUT is the input file explained above. These are required parameters.
 
-Output will be found in a file named output.txt.
+## Output
+
+Two output files will be produced: one FASTA formatted and one CSV formatted. The CSV file contains more BLAST information, and is good for getting a general picture of the BLAST results. If you would like to know more about the RM systems, their sequences and protein IDs are found in the FASTA file.
 
 ## Using Test Data:
 
