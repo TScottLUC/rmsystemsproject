@@ -83,7 +83,7 @@ fasta_output_name="RMBlastFasta.fasta"
 fasta_output=open(fasta_output_name,'w')
 
 #write the headers to the simple output file
-csv_output.write('Genome,Contig,RMSystemName,SystemType,E-Value,% Identity,Bitscore,Length\n')
+csv_output.write('Genome,Contig,RMSystemName,SystemType,E-Value,% Identity,Query Coverage,Bitscore,Length\n')
 
 #count the files BLASTed so the user can follow the progress of the script
 fileCount = 0
@@ -108,7 +108,7 @@ for fileName in os.listdir("sequences"):
   
   #This blast command will generate a csv formatted output file containing the Query Seq-id, the subject seq-id, the e-value, the query coverage, the percent identity, the bitscore, and the alignment length for each hit.
   #the local BLAST db created in RebaseSetup is named LocalRebaseDB
-  blast_command = 'blastn -ungapped -query sequences/' + fileName[:fileName.index('.gz')] + ' -db LocalRebaseDB -out ' + temp_output_file + ' -outfmt "10 qseqid sseqid evalue pident bitscore length"'
+  blast_command = 'blastn -ungapped -query sequences/' + fileName[:fileName.index('.gz')] + ' -db LocalRebaseDB -out ' + temp_output_file + ' -outfmt "10 qseqid sseqid evalue pident qcovs bitscore length"'
   os.system(blast_command)
   
   #read the csv file and sort it by bitscore
@@ -149,8 +149,9 @@ for fileName in os.listdir("sequences"):
   
   eValue = topHit[2]
   pIdent = topHit[3]
-  bitscore = topHit[4]
-  length = topHit[5]
+  qCov = topHit[4]
+  bitscore = topHit[5]
+  length = topHit[6]
   
   #write relevant output to the output files
   csv_output.write(genomeName + ",")
@@ -159,6 +160,7 @@ for fileName in os.listdir("sequences"):
   csv_output.write(systemType + ",")
   csv_output.write(eValue + ",")
   csv_output.write(pIdent + ",")
+  csv_output.write(qCov + ",")
   csv_output.write(bitscore + ",")
   csv_output.write(length + "\n")
   
