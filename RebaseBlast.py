@@ -173,43 +173,67 @@ for fileName in os.listdir("sequences"):
   fasta_output.write("Bitscore: " + bitscore + "\n")
   fasta_output.write(topHitSequence + "\n")
   
+#close the output files
 csv_output.close()
 fasta_output.close()
 
+#perform plasmid analysis if --plasmids was used 
 if args.plasmids:
+
+  #run the plasmid parser
   os.system('python3 ParsePlasmidGenomes.py')
+  
+  #add the accession numbers with plasmids to a list
   plasmidYes = []
   for line in open('plasmidAccessions.txt'):
     plasmidYes.append(line.strip())
+    
+  #initialize two dictionaries: one to holds the number of 'yes' for type and one that holds all for type
   typeYes = {}
   typeAll = {}
+  
+  #read all lines of the CSV (blast info) file, skipping the first line
   for line in open('RMBlastCSV.csv').readlines()[1:]:
+  
+    #extract the accession number from the file name
     blastInfo = line.split(',')
     accession = blastInfo[0]
     accession = accession[:accession.index('_ASM')]
+    
+    #extract the enzyme time that was found
     enzType = blastInfo[3]
+    
+    #add 1 to the enzyme type in the typeAll dictionary
     if enzType in typeAll:
       typeAll[enzType] += 1
     else:
       typeAll[enzType] = 1
+      
+    #add 1 to the enzyme type in the typeYes dictionary if it is present in plasmidYes
+    #(there has been shown a plasmid with a RM system of this type)
     if accession in plasmidYes:
       if enzType in typeYes:
         typeYes[enzType] += 1
       else:
         typeYes[enzType] = 1
   
-  plasmidResults = open('plasmidCompareResults.csv','w')
-  plasmidResults.write('RM System Type,Amount of System Type,Amount of Type with Plasmid,% with Plasmid\n')
+  #open an output file for the plasmid results
+  plasmidResultsFileName = 'plasmidCompareResults.csv')
+  plasmidResults = open(plasmidResultsFileName,'w')
+  
+  #write headers for the information to be written
+  plasmidResults.write('RM System Type,Total # of System Type,# with Plasmid,% with Plasmid\n')
   for rmType in typeAll.keys():
-      plasmidResults.write(rmType + ',')
-      plasmidResults.write(str(typeAll[rmType]) + ',')
+      plasmidResults.write(rmType + ',') #write the type name
+      plasmidResults.write(str(typeAll[rmType]) + ',') #write the total number of that type
+      #write the number of 'yes' values for that type
       try:
         plasmidResults.write(str(typeYes[rmType]) + ',')
-      except KeyError:
+      except KeyError: #if it has no 'yes' values, write 0
         typeYes[rmType] = 0
         plasmidResults.write(str(typeYes[rmType]) + '.,')
-      plasmidResults.write(str(float(typeYes[rmType]/typeAll[rmType])) + '\n')
-
+      #write the % of type that have plasmid
+      plasmidResults.write(str(float((typeYes[rmType]/typeAll[rmType]))*100) + '\n')
 
 
 print("Cleaning up...")
@@ -217,3 +241,6 @@ os.system("rm temp.csv")
 print("Done!")
 print("Output with more BLAST information (without sequences, csv formatted) can be found in " + csv_output_name + ".")
 print("Output with sequences from REBASE and protein IDs (fasta formatted) can be found in " + fasta_output_name + ".")
+
+if args.plasmids:
+  print("Output with comparison to the plasmid finder results can be found in " + plasmidResultsFileName + ".")
