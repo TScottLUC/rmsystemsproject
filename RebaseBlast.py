@@ -218,7 +218,7 @@ if args.plasmids:
         typeYes[enzType] = 1
   
   #open an output file for the plasmid results
-  plasmidResultsFileName = 'plasmidCompareResults.csv')
+  plasmidResultsFileName = 'plasmidCompareResults.csv'
   plasmidResults = open(plasmidResultsFileName,'w')
   
   #write headers for the information to be written
