@@ -1,6 +1,8 @@
 #import os to work with UNIX commands
 import os
 
+import sys
+
 #import SeqIO for parsing fasta files
 from Bio import SeqIO
 
@@ -15,12 +17,12 @@ import shutil
 #import argparse for command-line parameters
 import argparse
 
-#create the command-line parameters for email (for Entrez) and input file
+#create the command-line parameters for email (for Entrez), input file, and optional plasmid/phage analysis
 parser = argparse.ArgumentParser()
 parser.add_argument('-e', '--email', help="Enter your email for Entrez here", required=True)
-parser.add_argument('-i', '--input', help="Input file name (list of NCBI accession numbers, one on each line)", required=True)
+parser.add_argument('-i', '--input', help="Input file name (list of NCBI accession numbers, one on each line)")
 parser.add_argument('-p', '--plasmids', help="Use this tag if you would also like to compare the BLAST results to Plasmid Finder results (from plasmid_finder_results_putonti.tsv)", action="store_true")
-parser.add_argument('-ph','--phages',help="Use this tag if you would also like to compare the BLAST results to phage numbers (from )",action="store_true")
+parser.add_argument('-ph','--phages',help="Use this tag if you would also like to compare the BLAST results to phage numbers (from phage_results_putonti.csv)",action="store_true")
 args = parser.parse_args()
 
 #set Entrez's email to the email provided
@@ -39,13 +41,13 @@ rebase_records=list(SeqIO.parse(sequences,'fasta'))
 #read the genome accession #'s from the input file
 #(specified in args.input parameter)
 ids=[]
-for line in open(args.input).readlines():
-  ids.append(line.strip())
+if args.input != None:
+  for line in open(args.input).readlines():
+    ids.append(line.strip())
 
-#make a sequences directory to store all sequence fasta files in
-if (os.path.isdir('sequences')):
-  os.system('rm -r sequences')
-os.system('mkdir sequences')
+#make a sequences directory to store all sequence fasta files in (if there isn't already one)
+if not (os.path.isdir('sequences')):
+  os.system('mkdir sequences')
 
 #this for loop takes each id and downloads it's assembly file from NCBI through FTP
 idsused = 0 #count how many files have been downloaded so the user can follow the progress of the script
@@ -91,15 +93,20 @@ fileCount = 0
 
 #this for loop goes through each file in the sequences directory, unzips it, and BLASTs it against the local REBASE database created in the RebaseSetup script. It then writes information about the top hit to the output file.
 for fileName in os.listdir("sequences"):
-
-  unzippedFileName = fileName[:fileName.index('.gz')]
-  #unzip the .gz assembly files
-  with gzip.open("sequences/" + fileName,'rb') as f_in:
-    with open("sequences/" + unzippedFileName ,'wb') as f_out:
-      shutil.copyfileobj(f_in, f_out)
-      
-  #delete the original zipped file
-  os.system('rm sequences/' + fileName)
+  
+  #if the file is zipped, unzip it
+  if fileName.endswith('.gz'):
+    unzippedFileName = fileName[:fileName.index('.gz')]
+    #unzip the .gz assembly files
+    with gzip.open("sequences/" + fileName,'rb') as f_in:
+      with open("sequences/" + unzippedFileName ,'wb') as f_out:
+        shutil.copyfileobj(f_in, f_out)
+    #delete the original zipped file
+    os.system('rm sequences/' + fileName)
+       
+  #if the file is already unzipped, set its name to the unzipped variable 
+  else:
+    unzippedFileName = fileName
 
   #temporarily holds the BLAST results for each file
   temp_output_file='temp.csv'
@@ -109,7 +116,7 @@ for fileName in os.listdir("sequences"):
   
   #This blast command will generate a csv formatted output file containing the Query Seq-id, the subject seq-id, the e-value, the query coverage, the percent identity, the bitscore, and the alignment length for each hit.
   #the local BLAST db created in RebaseSetup is named LocalRebaseDB
-  blast_command = 'blastn -ungapped -query sequences/' + fileName[:fileName.index('.gz')] + ' -db LocalRebaseDB -out ' + temp_output_file + ' -outfmt "10 qseqid sseqid evalue pident qcovs bitscore length"'
+  blast_command = 'blastn -ungapped -query sequences/' + unzippedFileName + ' -db LocalRebaseDB -out ' + temp_output_file + ' -outfmt "10 qseqid sseqid evalue pident qcovs bitscore length"'
   os.system(blast_command)
   
   #read the csv file and sort it by bitscore
@@ -177,6 +184,10 @@ for fileName in os.listdir("sequences"):
 #close the output files
 csv_output.close()
 fasta_output.close()
+
+if fileCount == 0:
+  print("No input detected. FASTA files must be in a directory named 'sequences', or files may be downloaded from NCBI using --input (a file with accession numbers listed one per line)")
+  sys.exit()
 
 #perform plasmid analysis if --plasmids was used 
 if args.plasmids:
