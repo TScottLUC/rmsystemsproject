@@ -199,6 +199,9 @@ if fileCount == 0:
   print("No input detected. FASTA files must be in a directory named 'sequences', or files may be downloaded from NCBI using --input (a file with accession numbers listed one per line)")
   sys.exit()
 
+#remove the temporary csv file
+os.system('rm temp.csv')
+
 print("Done!")
 print("Output with more BLAST information (without sequences, csv formatted) can be found in " + csv_output_name + ".")
 print("Output with sequences from REBASE and protein IDs (fasta formatted) can be found in " + fasta_output_name + ".")
