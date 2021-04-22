@@ -32,13 +32,20 @@ for line in open('RMBlastCSV.csv').readlines()[1:]:
   
   #extract the accession number from the file name
   blastInfo = line.split(',')
-  accession = blastInfo[0]
-  accession = accession[:accession.index('_ASM')]
-  accessionsWithBlastInfo.append(accession)
-    
-  #extract the enzyme type that was found
-  enzType = blastInfo[3]
-  accessionDict[accession].append(enzType) #RM system type is now in the information for each accession (also contains genus and yes/no for plasmid)  
+  
+  #get the E value for the accession's hit
+  #if it is over 0.01, it will not be used
+  evalue = float(blastInfo[4])
+  
+  if evalue <= 0.01:
+    accession = blastInfo[0]
+    accession = accession[:accession.index('_ASM')]
+    accessionsWithBlastInfo.append(accession)
+      
+    #extract the enzyme type that was found
+    enzType = blastInfo[3]
+    accessionDict[accession].append(enzType) #RM system type is now in the information for each accession (also contains genus and yes/no for plasmid)  
+  
   
 #open an output file for the plasmid results
 plasmidResults = open(plasmidResultsFileName,'w')

@@ -1,6 +1,7 @@
 #import os to work with UNIX commands
 import os
 
+#sys may be used if no input is found (program will close)
 import sys
 
 #import SeqIO for parsing fasta files
@@ -21,8 +22,6 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('-e', '--email', help="Enter your email for Entrez here", required=True)
 parser.add_argument('-i', '--input', help="Input file name (list of NCBI accession numbers, one on each line)")
-parser.add_argument('-p', '--plasmids', help="Use this tag if you would also like to compare the BLAST results to Plasmid Finder results (from plasmid_finder_results_putonti.tsv)", action="store_true")
-parser.add_argument('-ph','--phages',help="Use this tag if you would also like to compare the BLAST results to phage numbers (from phage_results_putonti.csv)",action="store_true")
 args = parser.parse_args()
 
 #set Entrez's email to the email provided
@@ -88,6 +87,10 @@ fasta_output=open(fasta_output_name,'w')
 #write the headers to the simple output file
 csv_output.write('Genome,Contig,RMSystemName,SystemType,E-Value,% Identity,Query Coverage,Bitscore,Length\n')
 
+#make a directory to hold the full BLAST results
+if not (os.path.isdir('full_blast_results')):
+  os.system('mkdir full_blast_results')
+
 #count the files BLASTed so the user can follow the progress of the script
 fileCount = 0
 
@@ -108,7 +111,7 @@ for fileName in os.listdir("sequences"):
   else:
     unzippedFileName = fileName
 
-  #temporarily holds the BLAST results for each file
+  #make a file name for holding the BLAST results for each file
   temp_output_file='temp.csv'
   
   fileCount += 1
@@ -181,24 +184,22 @@ for fileName in os.listdir("sequences"):
   fasta_output.write("Bitscore: " + bitscore + "\n")
   fasta_output.write(topHitSequence + "\n")
   
+  #write full BLAST output to a file and save it in the full_blast_results directory
+  with open("full_blast_results/" + unzippedFileName[:unzippedFileName.index('_ASM')] + ".csv", 'w') as fullBlastOutput:
+    fullBlastOutput.write('qseqid,sseqid,evalue,pident,qcovs,bitscore,length\n')
+    for line in open('temp.csv'):
+      fullBlastOutput.write(line)
+  
 #close the output files
 csv_output.close()
 fasta_output.close()
 
+#if no files were found, notify the user
 if fileCount == 0:
   print("No input detected. FASTA files must be in a directory named 'sequences', or files may be downloaded from NCBI using --input (a file with accession numbers listed one per line)")
   sys.exit()
 
-#perform plasmid analysis if --plasmids was used 
-if args.plasmids:
-  os.system('python3 ParsePlasmidGenomes.py')
-   
-#perform phage analysis if --phages was used
-if args.phages:
-  os.system('python3 ParsePhageGenomes.py')
-
-print("Cleaning up...")
-os.system("rm temp.csv")
 print("Done!")
 print("Output with more BLAST information (without sequences, csv formatted) can be found in " + csv_output_name + ".")
 print("Output with sequences from REBASE and protein IDs (fasta formatted) can be found in " + fasta_output_name + ".")
+print("Full BLAST results for each genome ran can be found in full_blast_results/")
