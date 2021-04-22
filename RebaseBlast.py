@@ -18,7 +18,7 @@ import shutil
 #import argparse for command-line parameters
 import argparse
 
-#create the command-line parameters for email (for Entrez), input file, and optional plasmid/phage analysis
+#create the command-line parameters for email (for Entrez) and input file
 parser = argparse.ArgumentParser()
 parser.add_argument('-e', '--email', help="Enter your email for Entrez here", required=True)
 parser.add_argument('-i', '--input', help="Input file name (list of NCBI accession numbers, one on each line)")

@@ -1,11 +1,25 @@
+#import os for working with unix commands
 import os
-import sys
+
+#import SeqIO for parsing FASTA files
 from Bio import SeqIO
+
+#import FTP for using REBASE's FTP site
 from ftplib import FTP
 
+#import argparse for command-line parameters
+import argparse
+
+#create the command-line parameter for email (for REBASE FTP)
+parser = argparse.ArgumentParser()
+parser.add_argument('-e', '--email', help="Enter your email for REBASE FTP site here", required=True)
+args = parser.parse_args()
+email = args.email
+
+#retrieve the REBASE DNA sequence files using FTP
 print('Retrieving sequences from REBASE')
 ftp = FTP('ftp.neb.com')
-ftp.login(passwd='mloffredo@luc.edu')
+ftp.login(passwd=args.email)
 ftp.cwd('pub/rebase')
 # ftp.retrlines('LIST')
 with open('dna_seqs.txt', 'wb') as seqs_file:
