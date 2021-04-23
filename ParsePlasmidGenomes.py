@@ -101,7 +101,7 @@ for type in typeYes:
   
   #write the type and headers to the file
   plasmidResults.write(type + '\n')
-  plasmidResults.write('Genus,Total # of Genus,# with Plasmid\n')
+  plasmidResults.write('Genus,Total # of Genus,# with Plasmid,% with Plasmid\n')
   
   #go through the accessions
   for acc in accessionsWithBlastInfo:
