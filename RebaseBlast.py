@@ -27,9 +27,8 @@ args = parser.parse_args()
 #set Entrez's email to the email provided
 Entrez.email = args.email
 
-#import csv and operator for working with csv files
+#import csv for working with csv files
 import csv
-import operator
 
 #read REBASE sequence files, as these records will need to be parsed for
 #information on each top hit.
