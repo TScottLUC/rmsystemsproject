@@ -55,7 +55,7 @@ Two output files will be produced: one FASTA formatted (RMBlastFasta.fasta) and 
 
 ## Using Test Data:
 
-Test Data (10 accession numbers) is provided in AccessionNumbers10.txt. To run this, follow these instructions:
+Test Data (10 accession numbers) is provided in AccessionNumbers10.txt. To run this, run these commands:
 
 ```
 python3 RebaseSetup.py --email EMAIL
