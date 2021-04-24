@@ -71,11 +71,15 @@ for id in ids:
   except IndexError:
     continue
   
+  
   #download the assembly file via FTP to the sequences directory
   label = os.path.basename(url)
-  link = os.path.join(url,label+'_genomic.fna.gz')
-  link=link.replace('\\','/') #reformat some slashes from the link
-  urllib.request.urlretrieve(link, 'sequences/' + f'{label}.fna.gz')
+  if not os.path.isfile('sequences/' + f'{label}.fna'):
+    link = os.path.join(url,label+'_genomic.fna.gz')
+    link=link.replace('\\','/') #reformat some slashes from the link
+    urllib.request.urlretrieve(link, 'sequences/' + f'{label}.fna.gz')
+  else:
+    print(id + " found in sequences directory.")
 
 #open the output files
 csv_output_name = "RMBlastCSV.csv"
